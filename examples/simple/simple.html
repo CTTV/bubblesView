@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        #mydiv {
+            width: 600px;
+            height: 600px;
+        }
+    </style>
+  </head>
+  <body>
+    <link rel="stylesheet" href="../../build/cttv.bubblesView.css"/>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="../../build/cttv.bubblesView.js"></script>
+    <script src="http://tntvis.github.io/tnt.tree/build/tnt.tree.min.js" charset="utf-8"></script>
+    <script src="./data.js"></script>
+    <div id="mydiv"></div>
+    <script>
+      console.log(data1);
+      var root = tnt.tree.node(data1);
+      var view = bubblesView()
+          .root(root)
+          .on("click", function (node) {
+              if (node.parent() && node.children(true)) {
+                  node.toggle();
+                  if (node.property("__focused")) {
+                      node.property("__focused", false);
+                      view.focus(root);
+                  } else {
+                      node.property("__focused", true);
+                      view.focus(node);
+                  }
+                  view.update();
+              }
+           })
+          .diameter(600);
+      view(document.getElementById("mydiv"));
+    </script>
+  </body>
+  </html>

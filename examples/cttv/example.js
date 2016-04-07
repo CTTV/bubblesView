@@ -14,6 +14,7 @@ var theme = function () {
         .label("name")
         .on("click", function (d) {
             view.focus(d);
+            view.update();
         });
 
     return function (div) {
@@ -41,7 +42,7 @@ var theme = function () {
                 rest.call(url)
                 .then (function (resp) {
                     console.log(resp);
-                    view.data(tnt.tree.node(resp.body.data));
+                    view.root(tnt.tree.node(resp.body.data));
                     view.update();
                 });
 
@@ -60,7 +61,7 @@ var theme = function () {
         rest.call(url)
         .then (function (resp) {
             console.log(resp);
-            view.data(tnt.tree.node(resp.body.data));
+            view.root(tnt.tree.node(resp.body.data));
             view(div);
         });
     };

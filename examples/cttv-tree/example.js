@@ -9,10 +9,8 @@ var theme = function () {
     var view = bubblesView()
         .value("association_score")
         .key("__disease_id")
-        .label("__disease_name");
-        // .on("click", function (d) {
-        //     view.focus(d);
-        // });
+        .label("__disease_name")
+        .stripeInternalNodes(true);
 
     return function (div) {
         var url = rest.url.associations({
@@ -27,21 +25,33 @@ var theme = function () {
         rest.call(url)
         .then (function (resp) {
             var data = resp.body.data;
-            console.log(data);
             processData(data);
             var root = tnt.tree.node(data);
             var children = root.children();
-            for (var i=0; i<children.length; i++) {
-                var child = children[i];
-                child.toggle();
-            }
+            // for (var i=0; i<children.length; i++) {
+            //     var child = children[i];
+            //     child.toggle();
+            // }
             view.root(root);
             view.on("click", function (node) {
+                console.log(data);
                 if (node.parent() && node.children(true)) {
                     node.toggle();
                         if (node.property("__focused")) {
                             node.property("__focused", false);
-                            view.focus(root);
+                            // view.focus(root);
+                            // focus on the parent
+                            var children = node.children(true);
+                            if (children) {
+                                for (var i=0; i<children.length; i++) {
+                                    var child = children[i];
+                                    if(!child.is_collapsed()) {
+                                        child.toggle();
+                                        child.property("__focused", false);
+                                    }
+                                }
+                            }
+                            view.focus(node.parent());
                         } else {
                             node.property("__focused", true);
                             view.focus(node);
@@ -55,46 +65,32 @@ var theme = function () {
 
 
     // process data
-    // flattening the tree (duplicates?)
+    // no flattening
     function processData (data) {
-        if (data === undefined) {
+        if (!data) {
             return [];
         }
 
-        if (data.children === undefined) {
+        if (!data.children) {
             return data;
         }
-        data.name = ""; // the root doesn't include a name
+
+        // data.name = ""; // No name for root
         var therapeuticAreas = data.children;
         for (var i=0; i<therapeuticAreas.length; i++) {
             var tA = therapeuticAreas[i];
-            var taChildren = tA.children;
-            if (taChildren === undefined) {
-                // If the TA doesn't have a child, just create one for it with the same information as the TA
-                tA.children = [_.clone(tA)];
-                //continue;
-            }
-            //tA.__disease_id = tA.disease.id;
             tA.__disease_id = tA.disease.id;
             tA.__disease_name = tA.disease.name;
             var ta_node = tnt.tree.node(tA);
-            var flattenChildren = ta_node.flatten(true).data().children;
-            var newChildren = [];
-            var nonRedundant = {};
-            for (var j=0; j<flattenChildren.length; j++) {
-                var childData = flattenChildren[j];
-                // Put some properties to have direct access to disease name and id (will be used by bubblesView)
-                //childData.name = childData.disease.id;
-                childData.__disease_id = childData.disease.id;
-                childData.__disease_name = childData.disease.name;
-                if (nonRedundant[childData.name] === undefined) {
-                    nonRedundant[childData.name] = 1;
-                    newChildren.push(childData);
+            ta_node.apply(function (node) {
+                var d = node.data();
+                d.__disease_id = d.disease.id;
+                d.__disease_name = d.disease.name;
+                if (!node.is_leaf()) {
+                    node.toggle();
                 }
-            }
-            tA.children = newChildren;
+            }, true);
         }
         return data;
     }
-
 };

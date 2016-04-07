@@ -27,7 +27,6 @@ var theme = function () {
         rest.call(url)
         .then (function (resp) {
             var data = resp.body.data;
-            console.log(data);
             processData(data);
             var root = tnt.tree.node(data);
             var children = root.children();
@@ -64,7 +63,7 @@ var theme = function () {
         if (data.children === undefined) {
             return data;
         }
-        data.name = ""; // the root doesn't include a name
+        // data.name = "";
         var therapeuticAreas = data.children;
         for (var i=0; i<therapeuticAreas.length; i++) {
             var tA = therapeuticAreas[i];

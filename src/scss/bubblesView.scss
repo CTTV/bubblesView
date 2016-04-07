@@ -1,11 +1,12 @@
 $dim : 1000px;
 
 // Colors
+$snitchColor: #FF4000;
 $gray-background: rgb(62,139,173);
 $gray-lightlabel: #F0F0F0;
 $gray-lightfill: rgb(192, 192, 192);
 $blue-darklabel: navy;
-
+$font-family: arial;
 
 :host {
     display: block;
@@ -16,14 +17,20 @@ $blue-darklabel: navy;
     width: $dim;
 }
 
-#cttv_bubblesView_breadcrums {
-    position: absolute;
-    left: 5px;
-    top: 10px;
+// #cttv_bubblesView_breadcrums {
+//     position: absolute;
+//     left: 5px;
+//     top: 10px;
+// }
+
+.cttv_bubblesView_breadcrumbs {
+    position: relative;
+    top: -20px;
 }
 
-.cttv_bubblesView_breadcrumLabel {
-    padding-right: 10px;
+.cttv_bubblesView_breadcrumbLabel {
+    padding-right: 6px;
+    font-size: 14px;
 }
 
 .cttv_bubblesView_link {
@@ -31,8 +38,8 @@ $blue-darklabel: navy;
     cursor : pointer;
 }
 
-@mixin circle-fill ($color, $opacity, $stroke-width) {
-    fill : $color;
+@mixin circle-fill ($opacity, $stroke-width) {
+    // fill : $color;
     fill-opacity : $opacity;
     stroke-width: $stroke-width;
     stroke: black;
@@ -48,36 +55,42 @@ $blue-darklabel: navy;
     margin-bottom : 10px;
 }
 
-.bubblesViewNode {
+.bubblesViewInternal {
     //@include circle-fill(rgb(31, 119, 180), .25, .5px);
-    @include circle-fill($gray-lightfill, .25, .5px);
+    @include circle-fill(.25, .5px);
+    // mask: url(#mask-stripe);
 }
 
-.cttv_bubblesView {
-    border: 1px solid #CCC;
-    margin-top: 10px;
+.bubblesViewStripe {
+    mask: url(#mask-stripe);
 }
+
+// .cttv_bubblesView {
+//     border: 1px solid #CCC;
+//     margin-top: 10px;
+// }
+
 
 .bubblesViewLeaf {
-    @include circle-fill($gray-background, 1, .5px);
+    @include circle-fill(1, .5px);
 }
 
 .bubblesViewRoot {
-    @include circle-fill(white, 0, 0px);
+    @include circle-fill(0, 0px);
 }
 
-.highlight {
-    @include circle-highlight;
-}
+// .highlight {
+//     @include circle-highlight;
+// }
 
 
-.lightLabel {
-    fill: $gray-lightlabel;
-}
-
-.darkLabel {
-    fill: $blue-darklabel;
-}
+// .lightLabel {
+//     fill: $gray-lightlabel;
+// }
+//
+// .darkLabel {
+//     fill: $blue-darklabel;
+// }
 
 .topLabel {
     text-shadow: 0px 1px 0px $gray-lightfill,
@@ -86,21 +99,58 @@ $blue-darklabel: navy;
                -1px 0px 0px $gray-lightfill;
 }
 
-h2 {
-    font-size : 30px;
-    margin-top : 20px;
-    @include header();
+.chevron::before {
+	border-style: solid;
+	border-width: 0.25em 0.25em 0 0;
+	content: '';
+	display: inline-block;
+	height: 0.25em;
+	left: 0.15em;
+	position: relative;
+	top: 0.25em;
+	transform: rotate(45deg);
+	vertical-align: top;
+	width: 0.25em;
 }
 
-h6 {
-    font-size : 12px;
-    margin-top : 10px;
-    @include header();
-
+.snitchRect {
+    // fill: navy;
+    fill: $snitchColor;
 }
 
-small {
-    font-size : 65%;
-    font-weight : 400;
-    line-height : 1;
+#tnt_tooltip_89134 {
+    background-color: $snitchColor;
+    color: white;
 }
+
+.snitchText {
+    fill: white;
+    font-size: 9px;
+    pointer-events: none;
+}
+
+
+.cttv_bubblesView {
+    text {
+        font-family: $font-family;
+    }
+}
+
+// h2 {
+//     font-size : 30px;
+//     margin-top : 20px;
+//     @include header();
+// }
+//
+// h6 {
+//     font-size : 12px;
+//     margin-top : 10px;
+//     @include header();
+//
+// }
+//
+// small {
+//     font-size : 65%;
+//     font-weight : 400;
+//     line-height : 1;
+// }

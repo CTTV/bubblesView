@@ -1,7 +1,7 @@
 var theme = function () {
 
     var _ = function (bubblesView, div) {
-    	bubblesView.data(tnt.tree.node(mydata1));
+    	bubblesView.root(tnt.tree.node(mydata1));
     	var menu = d3.select(div)
     	    .append("div");
 
@@ -47,11 +47,11 @@ var theme = function () {
         		var n = this.value;
         		switch (n) {
         		case "EFO" :
-        		    bubblesView.data(tnt.tree.node(mydata1));
+        		    bubblesView.root(tnt.tree.node(mydata1));
         		    bubblesView.update();
         		    break;
         		case "Simplified" :
-        		    bubblesView.data(tnt.tree.node(mydata2));
+        		    bubblesView.root(tnt.tree.node(mydata2));
         		    bubblesView.update();
         		    break;
         		}
@@ -66,7 +66,7 @@ var theme = function () {
     	    .attr("value", "Simplified")
     	    .text("Simplified EFO");
 
-    	var tree = bubblesView.data();
+    	var tree = bubblesView.root();
     	tree.apply (function (node) {
     	    zoomSelect.append("option")
     		.attr("value", node.node_name())

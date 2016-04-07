@@ -98,9 +98,9 @@ var bubblesView = function () {
 
     render.update = function () {
         // Safely unfocus on update
-        if (conf.data.children()) {
-            render.focus(conf.data);
-        }
+        // if (conf.data.children()) {
+        //     render.focus(conf.data);
+        // }
 
         var packData = pack
             .size([conf.diameter, conf.diameter])
@@ -142,8 +142,6 @@ var bubblesView = function () {
                 dispatch.mouseout.call(this, tree_node(d));
             });
 
-        var exitCircles = circle
-            .exit();
 
 
         path = defs.selectAll("path")
@@ -203,18 +201,53 @@ var bubblesView = function () {
 
         var updateTransition = svg.transition("update")
             .duration(conf.duration);
-
         updateTransition
-            .selectAll("circle")
-            .attr("cx", function (d) {
-                return d.x;
-            })
-            .attr("cy", function (d) {
-                return d.y;
-            })
-            .attr("r", function (d) {
-                return d.r;
+            .tween("redraw", function () {
+                circle.each (function (d, i) {
+                    console.log(this);
+                    console.log(this.getAttribute("cx"));
+                    d.initX = d.parent ? d.parent.x || 0 : 0;
+                    d.interpolateX = d3.interpolate(d.initX, d.x);
+                    d.initY = d.parent ? d.parent.y || 0 : 0;
+                    d.interpolateY = d3.interpolate(d.initY, d.y);
+                    d.initR = this.getAttribute("r") || 0;
+                    d.interpolateR = d3.interpolate(d.initR, d.r);
+                });
+                return function (t) {
+                    console.log(" =>" + t);
+                    // circles
+                    circle
+                        .each(function (d) {
+                            console.log(d);
+                            console.log(this);
+                            this.setAttribute("cx", d.interpolateX(t));
+                            //d.x = d.interpolateX(t);
+                            this.setAttribute("cy", d.interpolateY(t));
+                            // d.y = d.interpolateY(t);
+                            this.setAttribute("r", d.interpolateR(t));
+                            // d.r = d.interpolateR(t);
+                        });
+                };
             });
+
+            var exitCircles = circle
+                .exit();
+
+
+        // var updateTransition = svg.transition("update")
+        //     .duration(conf.duration);
+
+        // updateTransition
+        //     .selectAll("circle")
+        //     .attr("cx", function (d) {
+        //         return d.x;
+        //     })
+        //     .attr("cy", function (d) {
+        //         return d.y;
+        //     })
+        //     .attr("r", function (d) {
+        //         return d.r;
+        //     });
 
         // Move labels
         updateTransition
@@ -293,7 +326,7 @@ var bubblesView = function () {
                 elem.parentNode.appendChild(elem); // Move to front
             });
 
-        return updateTransition;
+        return;
     };
 
     ////////////////////////
@@ -335,6 +368,10 @@ var bubblesView = function () {
     //     "scale (" + d3.event.scale + ")");
     // }
 
+    function redraw (v) {
+        console.log(v);
+    }
+
     function focusTo (v) {
         var k = conf.diameter / v[2];
         var offset = conf.diameter / 2;
@@ -342,6 +379,7 @@ var bubblesView = function () {
 
         circle
             .attr("cx", function (d) {
+                console.log(((d.x - v[0])*k)+offset);
                 return ((d.x - v[0])*k)+offset;
             })
             .attr("cy", function (d) {
@@ -488,14 +526,12 @@ var bubblesView = function () {
         focus = node;
         var focusData = focus.data();
 
-        var transition = d3.transition("focus")
+        var transition = svg.transition("focus")
             .duration(conf.duration);
         transition
             .tween ("zoom", function () {
                 var i = d3.interpolateZoom (view, [focusData.x, focusData.y, focusData.r*2]);
                 return function (t) {
-                    console.log(t);
-                    console.log(i(t));
                     focusTo(i(t));
                 };
             });
@@ -553,7 +589,7 @@ var bubblesView = function () {
                 .attr("width", d)
                 .attr("height", d);
 
-            render.focus(focus);
+            render.focus(render.focus());
         }
         conf.diameter = d;
         return this;
