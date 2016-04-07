@@ -1,1 +1,1 @@
-module.exports = bubblesView = require("./src/bView.js");
+module.exports = bubblesView = require("./src/bview.js");
