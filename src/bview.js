@@ -112,7 +112,9 @@ var bubblesView = function () {
         return render;
     };
 
-    function redraw () {
+    // Redraws the bubbles view
+    // if "relocate" is true it sets the transition to go from current position to its new position. If false, it doesn't interpolate the positions (useful for changes in diameter & responsive design)
+    function redraw (relocate) {
         var focusData = render.focus().data();
         if (!view) {
             var d = conf.root.data();
@@ -132,11 +134,11 @@ var bubblesView = function () {
                         r = r - r/5;
                     }
                     var c = d3.select(this);
-                    var initX = c.attr("cx") || 0;
+                    var initX = relocate ? (c.attr("cx") || 0) : d.x;
                     d.interpolateX = d3.interpolate(initX, d.x);
-                    var initY = c.attr("cy") || 0;
+                    var initY = relocate ? (c.attr("cy") || 0) : d.y;
                     d.interpolateY = d3.interpolate(initY, d.y);
-                    var initR = c.attr("r") || 0;
+                    var initR = relocate ? (c.attr("r") || 0) : d.r;
                     d.interpolateR = d3.interpolate(initR, r);
                     var initColor = c.attr("fill");
                     d.interpolateColor = d3.interpolate(initColor, d3.functor(conf.color)(tree_node(d)));
@@ -171,8 +173,9 @@ var bubblesView = function () {
                     // focus
                     var v = fi(t);
                     // view = v;
-                    var k = conf.diameter / v[2];
-                    var offset = conf.diameter / 2;
+                    var diameter = conf.diameter;
+                    var offset = diameter / 2;
+                    var k = diameter / v[2];
 
                     // circles
                     circle
@@ -364,12 +367,6 @@ var bubblesView = function () {
         // Circles
         circle = g.selectAll("circle.bubblesViewNode")
             .data(packData, conf.index);
-            // .data(packData, function (d) {
-            //     if (!d._parent) {
-            //         return d[conf.key];
-            //     }
-            //     return d[conf.key] + "_" + d._parent[conf.key];
-            // });
 
         circle
             .enter()
@@ -432,7 +429,7 @@ var bubblesView = function () {
                 dispatch.mouseout.call(this, tree_node(d));
             });
 
-        // remove snitchCircles
+        // remove snitchSquares
         d3.selectAll("rect.snitchRect")
             .remove();
         d3.selectAll("text.snitchText")
@@ -444,12 +441,6 @@ var bubblesView = function () {
         });
         path = defs.selectAll("path")
             .data(topData, conf.index);
-            // .data(topData, function (d) {
-            //     if (d._parent === undefined) {
-            //         return d[conf.key];
-            //     }
-            //     return d[conf.key] + "_" + d._parent[conf.key];
-            // });
 
         path
             .enter()
@@ -462,12 +453,6 @@ var bubblesView = function () {
         // Top level Labels
         topLabel = g.selectAll("text.topLabel")
             .data(topData, conf.index);
-            // .data(topData, function (d) {
-            //     if (d._parent === undefined) {
-            //         return d[conf.key];
-            //     }
-            //     return d[conf.key] + "_" + d._parent[conf.key];
-            // });
 
         topLabel
             .enter()
@@ -483,12 +468,6 @@ var bubblesView = function () {
         // Leaf Labels
         label = g.selectAll("text.leafLabel")
             .data(packData.filter(function (d) {return d.children === undefined;}), conf.index);
-            // .data(packData.filter(function (d) {return d.children === undefined;}), function (d) {
-            //     if (d._parent === undefined) {
-            //         return d[conf.key];
-            //     }
-            //     return d[conf.key] + "_" + d._parent[conf.key];
-            // });
 
         label
             .enter()
@@ -524,8 +503,7 @@ var bubblesView = function () {
                 elem.parentNode.appendChild(elem); // Move to front
             });
 
-
-        redraw();
+        redraw(true);
     };
 
     ////////////////////////
@@ -577,10 +555,6 @@ var bubblesView = function () {
 
         // Breadcrumbs
         if (conf.showBreadcrumbs) {
-            // var up = [{
-            //     'label': 'All',
-            //     "link": conf.root
-            // }];
             var up = [];
             f.upstream (function (ancestor) {
                 if (!ancestor.property("_parent")) { // Root
@@ -717,7 +691,7 @@ var bubblesView = function () {
                 .attr("height", d);
 
             //render.focus(render.focus());
-            render.update();
+            redraw(false);
         }
         conf.diameter = d;
         return this;
@@ -730,22 +704,6 @@ var bubblesView = function () {
         conf.useFullPath = b;
         return this;
     };
-
-    // render.maxVal = function (v) {
-    //     if (!arguments.length) {
-    //         return conf.maxVal;
-    //     }
-    //     conf.maxVal = v;
-    //     return this;
-    // };
-    //
-    // render.breadcrumbsClick = function (cb) {
-    //     if (!arguments.length) {
-    //         return conf.breadcrumsClick;
-    //     }
-    //     conf.breadcrumsClick = cb;
-    //     return this;
-    // };
 
     render.color = function (cb) {
         if (!arguments.length) {
