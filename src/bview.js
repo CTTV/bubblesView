@@ -37,7 +37,7 @@ var bubblesView = function () {
         },
         breadcrumbsClick: function (n) {
             render.focus(n.link);
-            render.update();
+            render.update(true);
         },
         useFullPath: false,
         focus: undefined
@@ -107,19 +107,134 @@ var bubblesView = function () {
             .size([conf.diameter, conf.diameter])
             .padding(1.5);
 
-        render.update();
+        render.update(false);
 
         return render;
     };
 
+    function zoom () {
+        var diameter = conf.diameter;
+        var offset = diameter / 2;
+
+        // circle
+        circle
+            .attr("cx", function (d) {
+                return d.x;
+            })
+            .attr("cy", function (d) {
+                return d.y;
+            })
+            .attr("r", function (d) {
+                return d.r;
+            });
+
+        // label paths
+        path
+            .attr("d", function (d) {
+                return describeArc((d.x), (d.y+10), d.r, 160, -160);
+            });
+
+        // TopLabels
+        topLabel
+            .each(function (d, i) {
+                d3.select(this)
+                    .select("*")
+                    .remove();
+                d3.select(this)
+                    .append("textPath")
+                    // .attr("xlink:href", function () {
+                    //     return "#s"+i;
+                    // })
+                    // When the "base" tag is present in the page, linking by name doesn't work in FF (Safari and Chrome looks good). We prepend window.location.href to get full IRI
+                    // https://gist.github.com/leonderijke/c5cf7c5b2e424c0061d2
+                    .attr("xlink:href", (conf.useFullPath ? window.location.href : "") + "#" + getPathId(d))
+                    .attr("startOffset", "50%")
+                    .text(function () {
+                        if (Math.PI*d.r/8 < 5) {
+                            return "";
+                        }
+                        return d[conf.label] ? d[conf.label].substring(0, Math.PI*d.r/8) : "";
+                    });
+            });
+            // Labels
+
+        label
+            .each(function (d, i) {
+                d3.select(this)
+                    .attr("x", function (d) {
+                        return d.x;
+                    })
+                    .attr("y", function (d) {
+                        return d.y;
+                    })
+                    .text(function (d) {
+                        if (d[conf.label]) {
+                            if (d.r / 3 < 3) {
+                                return "";
+                            }
+                            return d[conf.label].substring(0, d.r / 3);
+                        }
+                    })
+                    .attr("font-size", function (d) {
+                        var circleLength = d.r / 3;
+                        var labelLength = d[conf.label] ? d[conf.label].length : 0;
+                        if (circleLength < labelLength) {
+                            return 10;
+                        }
+                        if (circleLength * 0.8 < labelLength) {
+                            return 12;
+                        }
+                        if (circleLength * 0.6 < labelLength) {
+                            return 14;
+                        }
+                    });
+            });
+
+        // snitch circles (number of hidden elements)
+        circle
+            .each(function (d) {
+                if (d._hidden && d.depth > 1) {
+                    var parentCircle = d3.select(this);
+                    var px = parseInt(parentCircle.attr("cx"));
+                    var py = parseInt(parentCircle.attr("cy"));
+                    var pr = parseInt(parentCircle.attr("r"));
+                    var pos = polarToCartesian(px, py, pr, 45);
+                    svg.append("rect")
+                        .attr("class", "snitchRect")
+                        .attr("x", pos.x-7)
+                        .attr("rx", 3)
+                        .attr("ry", 3)
+                        .attr("y", pos.y-7)
+                        .attr("width", 14)
+                        .attr("height", 14)
+                        .on("mouseover", function () {
+                            tooltips.mouseover.call(this, d);
+                        })
+                        .on("mouseout", function () {
+                            tooltips.mouseout.call(this, d);
+                        });
+
+                    svg.append("text")
+                        .attr("class", "snitchText")
+                        .attr("x", pos.x)
+                        .attr("y", pos.y)
+                        // .attr("fontsize", 10)
+                        .attr("text-anchor", "middle")
+                        .attr("alignment-baseline", "middle")
+                        .text(d._hidden);
+                }
+            });
+
+    }
+
     // Redraws the bubbles view
-    // if "relocate" is true it sets the transition to go from current position to its new position. If false, it doesn't interpolate the positions (useful for changes in diameter & responsive design)
-    function redraw (relocate) {
+    function redraw () {
         var focusData = render.focus().data();
-        if (!view) {
-            var d = conf.root.data();
-            view = [d.x, d.y, d.r*2];
-        }
+        view = [focusData.x, focusData.y, focusData.r*2];
+        // if (!view) {
+            // var d = conf.root.data();
+            // view = [d.x, d.y, d.r*2];
+        // }
         var t = svg.transition("update")
             .duration(conf.duration)
             .tween("zoom", function () {
@@ -134,11 +249,11 @@ var bubblesView = function () {
                         r = r - r/5;
                     }
                     var c = d3.select(this);
-                    var initX = relocate ? (c.attr("cx") || 0) : d.x;
+                    var initX = c.attr("cx") || 0;
                     d.interpolateX = d3.interpolate(initX, d.x);
-                    var initY = relocate ? (c.attr("cy") || 0) : d.y;
+                    var initY = c.attr("cy") || 0;
                     d.interpolateY = d3.interpolate(initY, d.y);
-                    var initR = relocate ? (c.attr("r") || 0) : d.r;
+                    var initR = c.attr("r") || 0;
                     d.interpolateR = d3.interpolate(initR, r);
                     var initColor = c.attr("fill");
                     d.interpolateColor = d3.interpolate(initColor, d3.functor(conf.color)(tree_node(d)));
@@ -172,7 +287,8 @@ var bubblesView = function () {
                 return function (t) {
                     // focus
                     var v = fi(t);
-                    // view = v;
+                    // var v = [conf.diameter/2, conf.diameter/2, conf.diameter];
+                    view = v;
                     var diameter = conf.diameter;
                     var offset = diameter / 2;
                     var k = diameter / v[2];
@@ -360,8 +476,9 @@ var bubblesView = function () {
 
     }
 
-    render.update = function () {
+    render.update = function (transition) {
         var packData = pack
+            .size([conf.diameter, conf.diameter])
             .nodes(conf.root.data());
 
         // Circles
@@ -503,7 +620,11 @@ var bubblesView = function () {
                 elem.parentNode.appendChild(elem); // Move to front
             });
 
-        redraw(true);
+        if (transition) {
+            redraw();
+        } else {
+            zoom();
+        }
     };
 
     ////////////////////////
@@ -684,16 +805,25 @@ var bubblesView = function () {
             return conf.diameter;
         }
 
+        conf.diameter = d;
+
         // Hot plug
         if (svg) {
             svg
                 .attr("width", d)
                 .attr("height", d);
 
-            //render.focus(render.focus());
-            redraw(false);
+            // render.focus(render.focus());
+            // redraw(false);
+
+            // var gNode = g.node();
+            // while (gNode.firstChild) {
+            //     gNode.removeChild(gNode.firstChild);
+            // }
+            render.update(false);
+            // zoom();
+
         }
-        conf.diameter = d;
         return this;
     };
 
