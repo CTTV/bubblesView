@@ -125,7 +125,11 @@ var bubblesView = function () {
                 return d.y;
             })
             .attr("r", function (d) {
-                return d.r;
+                var r = d.r;
+                if (d.depth>1 && d._parent.children.length === 1) {
+                    return (r - r/5);
+                }
+                return r;
             });
 
         // label paths
