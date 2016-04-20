@@ -190,6 +190,8 @@ var bubblesView = function () {
                         }
                         if (circleLength * 0.6 < labelLength) {
                             return 14;
+                        } else {
+                            return 16;
                         }
                     });
             });
@@ -387,6 +389,8 @@ var bubblesView = function () {
                                         }
                                         if (circleLength * 0.6 < labelLength) {
                                             return 14;
+                                        } else {
+                                            return 16;
                                         }
                                     });
                                 }
