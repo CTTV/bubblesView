@@ -118,6 +118,7 @@ var bubblesView = function () {
 
         // circle
         circle
+            // .transition()
             .attr("cx", function (d) {
                 return d.x;
             })
@@ -236,7 +237,8 @@ var bubblesView = function () {
     // Redraws the bubbles view
     function redraw () {
         var focusData = render.focus().data();
-        view = [focusData.x, focusData.y, focusData.r*2];
+        // view = [focusData.x, focusData.y, focusData.r*2];
+        view = [conf.diameter/2, conf.diameter/2, conf.diameter];
         // if (!view) {
             // var d = conf.root.data();
             // view = [d.x, d.y, d.r*2];
@@ -291,7 +293,10 @@ var bubblesView = function () {
                 });
 
                 return function (t) {
-                    // focus
+                    // In redraw 2 transitions are happening at the same time:
+                    // 1) Relocation of all the bubbles to their new position based on different structure
+                    // 2) Focus on a specific node
+                    //
                     var v = fi(t);
                     // var v = [conf.diameter/2, conf.diameter/2, conf.diameter];
                     view = v;
@@ -486,12 +491,13 @@ var bubblesView = function () {
 
     render.update = function (transition) {
         var packData = pack
-            .size([conf.diameter, conf.diameter])
+            // .size([conf.diameter, conf.diameter])
             .nodes(conf.root.data());
 
         // Circles
         circle = g.selectAll("circle.bubblesViewNode")
             .data(packData, conf.index);
+
 
         circle
             .enter()
@@ -509,6 +515,7 @@ var bubblesView = function () {
                 if (!d.children) {
                     classes.push("bubblesViewLeaf");
                 }
+
 
                 return classes.join(" ");
             })
@@ -553,6 +560,7 @@ var bubblesView = function () {
             .on ("mouseout", function (d) {
                 dispatch.mouseout.call(this, tree_node(d));
             });
+
 
         // remove snitchSquares
         d3.selectAll("rect.snitchRect")
