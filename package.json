@@ -1,6 +1,6 @@
 {
   "name": "cttv.bubblesView",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "CTTV bubbles view for the target evidence",
   "main": "index.js",
   "directories": {
